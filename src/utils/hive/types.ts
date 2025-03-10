@@ -34,3 +34,13 @@ export interface SocialLinks {
   discord: string;
   github: string;
 }
+
+export interface ProjectFormValues {
+  title: string;
+  category: string;
+  fundingGoal: string;
+  description: string;
+  coverImage?: string;
+  socialLinks: SocialLinks;
+  termsAccepted: boolean;
+}
