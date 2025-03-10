@@ -8,12 +8,28 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Award, Star, Trophy, Users } from "lucide-react";
 
-interface ProjectsListProps {
-  projects: any[];
+export interface Project {
+  id: string;
+  title: string;
+  creator: string;
+  description: string;
+  image: string;
+  category: string;
+  target: string;
+  raised: string;
+  progress: number;
+  created_at?: string;
+  status?: string;
+  contributors?: any[];
 }
 
-export const ProjectsList = ({ projects }: ProjectsListProps) => {
-  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+export interface ProjectsListProps {
+  projects: Project[];
+  onProjectClick?: (project: Project) => void;
+}
+
+export const ProjectsList = ({ projects, onProjectClick }: ProjectsListProps) => {
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
@@ -56,9 +72,13 @@ export const ProjectsList = ({ projects }: ProjectsListProps) => {
     return 0;
   });
 
-  const handleProjectClick = (project: any) => {
-    setSelectedProject(project);
-    setIsModalOpen(true);
+  const handleProjectClick = (project: Project) => {
+    if (onProjectClick) {
+      onProjectClick(project);
+    } else {
+      setSelectedProject(project);
+      setIsModalOpen(true);
+    }
   };
 
   const containerVariants = {
@@ -227,11 +247,13 @@ export const ProjectsList = ({ projects }: ProjectsListProps) => {
         ))}
       </motion.div>
 
-      <ProjectModal
-        project={selectedProject}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      {!onProjectClick && (
+        <ProjectModal
+          project={selectedProject}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

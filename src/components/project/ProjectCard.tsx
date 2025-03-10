@@ -5,19 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Bookmark } from "lucide-react";
 import { useBookmarks } from "@/hooks/use-bookmarks";
+import { Project } from "@/components/project/ProjectsList";
 
 interface ProjectCardProps {
-  project: {
-    id: string;
-    title: string;
-    creator: string;
-    description: string;
-    image: string;
-    category: string;
-    target: string;
-    raised: string;
-    progress: number;
-  };
+  project: Project;
   onClick: () => void;
 }
 

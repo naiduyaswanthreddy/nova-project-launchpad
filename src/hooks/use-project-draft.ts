@@ -35,6 +35,15 @@ export function useProjectDraft(draftId: string, creator: string) {
         const existingDraft = drafts.find((d: any) => d.id === draftId);
         
         if (existingDraft) {
+          // Ensure socialLinks has all required properties
+          const socialLinks = existingDraft.socialLinks || {};
+          existingDraft.socialLinks = {
+            website: socialLinks.website || "",
+            twitter: socialLinks.twitter || "",
+            discord: socialLinks.discord || "",
+            github: socialLinks.github || ""
+          };
+          
           setDraft(existingDraft);
         } else if (draftId === 'new') {
           // Create a new draft
@@ -83,9 +92,15 @@ export function useProjectDraft(draftId: string, creator: string) {
       const drafts = JSON.parse(localStorage.getItem('projectDrafts') || '[]');
       const draftIndex = drafts.findIndex((d: any) => d.id === updatedDraft.id);
       
-      // Update lastUpdated timestamp
+      // Ensure socialLinks is properly formatted
       const draftToSave = {
         ...updatedDraft,
+        socialLinks: {
+          website: updatedDraft.socialLinks?.website || "",
+          twitter: updatedDraft.socialLinks?.twitter || "",
+          discord: updatedDraft.socialLinks?.discord || "",
+          github: updatedDraft.socialLinks?.github || ""
+        },
         lastUpdated: new Date().toISOString()
       };
       
@@ -120,9 +135,21 @@ export function useProjectDraft(draftId: string, creator: string) {
   const updateDraft = useCallback((updates: Partial<ProjectDraftData>) => {
     if (!draft) return;
     
+    // Ensure socialLinks is properly formatted if it's being updated
+    let updatedSocialLinks = draft.socialLinks;
+    if (updates.socialLinks) {
+      updatedSocialLinks = {
+        website: updates.socialLinks.website || draft.socialLinks.website || "",
+        twitter: updates.socialLinks.twitter || draft.socialLinks.twitter || "",
+        discord: updates.socialLinks.discord || draft.socialLinks.discord || "",
+        github: updates.socialLinks.github || draft.socialLinks.github || ""
+      };
+    }
+    
     const updatedDraft = {
       ...draft,
-      ...updates
+      ...updates,
+      socialLinks: updatedSocialLinks
     };
     
     setDraft(updatedDraft);

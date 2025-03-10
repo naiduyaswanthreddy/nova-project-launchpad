@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigation } from "@/components/layout/Navigation";
 import Index from "./pages/Index";
-import Projects from "./pages/Projects";
 import MyProjects from "./pages/MyProjects";
 import BookmarkedProjects from "./pages/BookmarkedProjects";
 import Membership from "./pages/Membership";
@@ -40,7 +39,7 @@ const App = () => {
           <div className="pt-16"> {/* Added padding to prevent content from being hidden under navbar */}
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/projects" element={<Projects />} />
+              {/* Projects route removed as requested */}
               <Route path="/my-projects" element={<MyProjects />} />
               <Route path="/bookmarks" element={<BookmarkedProjects />} />
               <Route path="/membership" element={<Membership />} />

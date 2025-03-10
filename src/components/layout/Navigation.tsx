@@ -10,10 +10,8 @@ import { getConnectedUsername } from "@/utils/hive";
 import { 
   Menu, 
   X, 
-  PanelRight, 
   Bookmark, 
   Home, 
-  FolderOpen, 
   UserCircle, 
   Crown
 } from "lucide-react";
@@ -86,7 +84,7 @@ export const Navigation = () => {
   
   const navLinks = [
     { name: "Home", path: "/", icon: <Home className="mr-2 h-4 w-4" /> },
-    { name: "Projects", path: "/projects", icon: <FolderOpen className="mr-2 h-4 w-4" /> },
+    // Projects link removed as requested
     { name: "My Projects", path: "/my-projects", icon: <UserCircle className="mr-2 h-4 w-4" /> },
     { name: "Bookmarks", path: "/bookmarks", icon: <Bookmark className="mr-2 h-4 w-4" /> },
     { name: "Membership", path: "/membership", icon: <Crown className="mr-2 h-4 w-4" /> },
