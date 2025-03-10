@@ -1,185 +1,204 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { WalletConnect } from "@/components/hive/WalletConnect";
-import { Menu, X, Rocket } from "lucide-react";
+import { JoinMovementSection } from "@/components/landing/JoinMovementSection";
 import { CreateProjectForm } from "@/components/project/CreateProjectForm";
 import { getConnectedUsername } from "@/utils/hive";
+import { 
+  Menu, 
+  X, 
+  PanelRight, 
+  Bookmark, 
+  Home, 
+  FolderOpen, 
+  UserCircle, 
+  Crown
+} from "lucide-react";
 
 export const Navigation = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
+  const location = useLocation();
   const navigate = useNavigate();
-
+  
+  // Check if user is connected
+  useEffect(() => {
+    const connectedUser = getConnectedUsername();
+    setUsername(connectedUser);
+  }, []);
+  
+  // Update username when window gets focus (in case user connects/disconnects in another tab)
+  useEffect(() => {
+    const handleFocus = () => {
+      const connectedUser = getConnectedUsername();
+      setUsername(connectedUser);
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+  
+  // Handle scroll events for sticky header
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToSection = (sectionId: string) => {
-    // If we're on the homepage, scroll to the section
-    if (window.location.pathname === "/") {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+      if (window.scrollY > 10) {
+        setIsSticky(true);
+      } else {
+        setIsSticky(false);
       }
-    } else {
-      // If we're not on the homepage, navigate to homepage and then scroll
-      navigate("/");
-      // Need to wait for navigation to complete before scrolling
-      setTimeout(() => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    }
-    setIsMobileMenuOpen(false);
-  };
-
-  const handleStartProject = () => {
-    const username = getConnectedUsername();
+    };
     
-    // If not connected, we can either redirect to connect page or show the modal
-    // (which will show a connect wallet message)
-    setIsCreateModalOpen(true);
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+  
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
-
+  
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+  
+  const openCreateProjectModal = () => {
+    if (username) {
+      setIsModalOpen(true);
+    } else {
+      // If not logged in, scroll to join section
+      const joinSection = document.getElementById('join-section');
+      if (joinSection) {
+        joinSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // If not on homepage, go to homepage and scroll to join section
+        navigate('/#join-section');
+      }
+    }
+  };
+  
+  const navLinks = [
+    { name: "Home", path: "/", icon: <Home className="mr-2 h-4 w-4" /> },
+    { name: "Projects", path: "/projects", icon: <FolderOpen className="mr-2 h-4 w-4" /> },
+    { name: "My Projects", path: "/my-projects", icon: <UserCircle className="mr-2 h-4 w-4" /> },
+    { name: "Bookmarks", path: "/bookmarks", icon: <Bookmark className="mr-2 h-4 w-4" /> },
+    { name: "Membership", path: "/membership", icon: <Crown className="mr-2 h-4 w-4" /> },
+  ];
+  
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'py-2 bg-background/80 backdrop-blur-md shadow-md' : 'py-4 bg-transparent'}`}>
-        <div className="container px-4 mx-auto flex justify-between items-center">
-          <div className="flex items-center">
-            <h1 className="text-xl font-bold gradient-text mr-8">
-              <Link to="/">CrowdHive</Link>
-            </h1>
+      <header 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isSticky ? 'bg-background/80 backdrop-blur-lg border-b border-gray-800' : 'bg-transparent'
+        }`}
+      >
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo */}
+            <Link to="/" className="flex items-center">
+              <span className="text-2xl font-bold gradient-text">CrowdHive</span>
+            </Link>
             
-            <div className="hidden md:flex space-x-6">
-              <Link 
-                to="/"
-                className="text-sm font-medium hover:text-primary transition-colors"
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
+                    location.pathname === link.path
+                      ? 'text-white bg-primary/20'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                  }`}
+                  onClick={closeMenu}
+                >
+                  {link.icon}
+                  {link.name}
+                </Link>
+              ))}
+              <Button 
+                id="create-project-btn"
+                onClick={openCreateProjectModal}
+                className="ml-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
               >
-                Home
-              </Link>
-              <button 
-                onClick={() => scrollToSection('how-it-works')}
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                How It Works
-              </button>
-              <Link
-                to="/projects"
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                Projects
-              </Link>
-              <button 
-                onClick={() => scrollToSection('why-choose-us')}
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                Why Choose Us
-              </button>
-              <Link
-                to="/my-projects"
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                My Projects
-              </Link>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <ThemeSwitch />
-            <div className="hidden md:block">
-              <WalletConnect />
-            </div>
-            <Button 
-              className="hidden md:inline-flex bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-              onClick={handleStartProject}
-            >
-              <Rocket className="mr-2 h-4 w-4" />
-              Start a Project
-            </Button>
-
-            {/* Mobile menu button */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X /> : <Menu />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-card shadow-lg px-4 py-5 border-t border-border animate-in slide-in-from-top">
-            <div className="flex flex-col space-y-4">
-              <Link
-                to="/"
-                className="text-sm font-medium hover:text-primary transition-colors py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <button 
-                onClick={() => scrollToSection('how-it-works')}
-                className="text-sm font-medium hover:text-primary transition-colors py-2 text-left"
-              >
-                How It Works
-              </button>
-              <Link
-                to="/projects"
-                className="text-sm font-medium hover:text-primary transition-colors py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Projects
-              </Link>
-              <button 
-                onClick={() => scrollToSection('why-choose-us')}
-                className="text-sm font-medium hover:text-primary transition-colors py-2 text-left"
-              >
-                Why Choose Us
-              </button>
-              <Link
-                to="/my-projects"
-                className="text-sm font-medium hover:text-primary transition-colors py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                My Projects
-              </Link>
-              <div className="py-2">
+                Create Project
+              </Button>
+            </nav>
+            
+            {/* Right side items */}
+            <div className="flex items-center">
+              <ThemeSwitch />
+              <div className="hidden md:block ml-2">
                 <WalletConnect />
               </div>
-              <Button 
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  handleStartProject();
-                }}
+              
+              {/* Mobile menu button */}
+              <button
+                onClick={toggleMenu}
+                className="md:hidden ml-2 p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none"
               >
-                <Rocket className="mr-2 h-4 w-4" />
-                Start a Project
-              </Button>
+                {isMenuOpen ? (
+                  <X className="block h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <Menu className="block h-6 w-6" aria-hidden="true" />
+                )}
+              </button>
             </div>
           </div>
-        )}
-      </nav>
-
+        </div>
+        
+        {/* Mobile Navigation */}
+        <div 
+          className={`md:hidden transition-all duration-300 ease-in-out ${
+            isMenuOpen 
+            ? 'max-h-screen opacity-100 visible glass-card border-t border-gray-800' 
+            : 'max-h-0 opacity-0 invisible'
+          }`}
+        >
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+                  location.pathname === link.path
+                    ? 'text-white bg-primary/20'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                }`}
+                onClick={closeMenu}
+              >
+                {link.icon}
+                {link.name}
+              </Link>
+            ))}
+            <Button 
+              onClick={() => {
+                openCreateProjectModal();
+                closeMenu();
+              }}
+              className="w-full mt-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            >
+              Create Project
+            </Button>
+            
+            <div className="pt-4 pb-3 border-t border-gray-800">
+              <div className="px-3">
+                <WalletConnect />
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+      
       {/* Create Project Modal */}
-      <CreateProjectForm 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
-      />
+      <CreateProjectForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   );
 };

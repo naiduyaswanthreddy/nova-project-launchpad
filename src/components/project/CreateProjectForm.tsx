@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -48,7 +47,8 @@ import {
   Rocket, 
   ArrowRight, 
   ArrowLeft, 
-  Save 
+  Save,
+  Clock
 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -58,6 +58,7 @@ import {
   postProject,
   isKeychainInstalled
 } from "@/utils/hive";
+import { useProjectDraft } from "@/hooks/use-project-draft";
 
 // Project creation form schema
 const projectSchema = z.object({
@@ -101,21 +102,23 @@ const CATEGORIES = [
   "Theater"
 ];
 
-export function CreateProjectForm({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function CreateProjectForm({ isOpen, onClose, editDraftId }: { isOpen: boolean; onClose: () => void; editDraftId?: string }) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [savingDraft, setSavingDraft] = useState(false);
   const [tempCoverImage, setTempCoverImage] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isKeychainAvailable, setIsKeychainAvailable] = useState(false);
+  const username = getConnectedUsername();
+  const draftId = editDraftId || 'new';
+  const { draft, isLoading: isDraftLoading, updateDraft, autoSaveStatus } = useProjectDraft(draftId, username || '');
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Check if user is connected with Hive Keychain
   useEffect(() => {
     const checkAuth = () => {
-      const username = getConnectedUsername();
-      setIsAuthenticated(!!username);
+      const name = getConnectedUsername();
+      setIsAuthenticated(!!name);
       setIsKeychainAvailable(isKeychainInstalled());
     };
     
@@ -127,7 +130,7 @@ export function CreateProjectForm({ isOpen, onClose }: { isOpen: boolean; onClos
     }
   }, [isOpen]);
 
-  // Create form with default values
+  // Create form with draft values
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
@@ -146,14 +149,51 @@ export function CreateProjectForm({ isOpen, onClose }: { isOpen: boolean; onClos
     }
   });
 
+  // Load draft data into form
+  useEffect(() => {
+    if (draft && !isDraftLoading) {
+      form.reset({
+        title: draft.title,
+        category: draft.category,
+        fundingGoal: draft.fundingGoal,
+        description: draft.description,
+        coverImage: draft.coverImage,
+        socialLinks: draft.socialLinks,
+        termsAccepted: draft.termsAccepted
+      });
+      
+      if (draft.coverImage) {
+        setTempCoverImage(draft.coverImage);
+      }
+    }
+  }, [draft, isDraftLoading, form]);
+
+  // Auto-save form changes
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      if (draft && !isDraftLoading) {
+        const formValues = form.getValues();
+        updateDraft({
+          title: formValues.title,
+          category: formValues.category,
+          fundingGoal: formValues.fundingGoal,
+          description: formValues.description,
+          coverImage: formValues.coverImage,
+          socialLinks: formValues.socialLinks,
+          termsAccepted: formValues.termsAccepted
+        });
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, updateDraft, draft, isDraftLoading]);
+
   // Reset form when dialog closes
   useEffect(() => {
     if (!isOpen) {
-      form.reset();
       setStep(0);
-      setTempCoverImage(null);
     }
-  }, [isOpen, form]);
+  }, [isOpen]);
 
   const steps = [
     { title: "Basic Info", description: "Project title and category" },
@@ -166,8 +206,6 @@ export function CreateProjectForm({ isOpen, onClose }: { isOpen: boolean; onClos
 
   const onSubmit = async (data: ProjectFormValues) => {
     // Check if user is connected with Hive Keychain
-    const username = getConnectedUsername();
-    
     if (!username) {
       toast({
         title: "Authentication Error",
@@ -223,6 +261,13 @@ ${data.fundingGoal} HIVE
           description: "Your project has been successfully posted to the Hive blockchain.",
         });
         
+        // Remove draft if successful
+        if (draft) {
+          const drafts = JSON.parse(localStorage.getItem('projectDrafts') || '[]');
+          const updatedDrafts = drafts.filter((d: any) => d.id !== draft.id);
+          localStorage.setItem('projectDrafts', JSON.stringify(updatedDrafts));
+        }
+        
         // Close modal and redirect to projects page
         onClose();
         navigate('/projects');
@@ -239,74 +284,6 @@ ${data.fundingGoal} HIVE
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const saveAsDraft = async () => {
-    const username = getConnectedUsername();
-    
-    if (!username) {
-      toast({
-        title: "Authentication Error",
-        description: "Please connect your Hive wallet before saving a draft",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setSavingDraft(true);
-    
-    try {
-      // Get the current form values, even if they're not complete
-      const currentValues = form.getValues();
-      
-      // Only require title for draft
-      if (!currentValues.title || currentValues.title.length < 3) {
-        toast({
-          title: "Draft Not Saved",
-          description: "Please enter at least a title (3+ characters) for your draft",
-          variant: "destructive"
-        });
-        setSavingDraft(false);
-        return;
-      }
-      
-      // Store the draft locally since we can't save incomplete projects to blockchain yet
-      const drafts = JSON.parse(localStorage.getItem('projectDrafts') || '[]');
-      
-      const draft = {
-        id: Date.now().toString(),
-        title: currentValues.title,
-        category: currentValues.category || "Uncategorized",
-        fundingGoal: currentValues.fundingGoal || "0",
-        description: currentValues.description || "Draft project",
-        coverImage: currentValues.coverImage || null,
-        socialLinks: currentValues.socialLinks || null,
-        creator: username,
-        status: 'draft',
-        created_at: new Date().toISOString()
-      };
-      
-      drafts.push(draft);
-      localStorage.setItem('projectDrafts', JSON.stringify(drafts));
-      
-      toast({
-        title: "Draft saved!",
-        description: "Your project draft has been saved locally. Access it from 'My Projects'.",
-      });
-      
-      // Close modal
-      onClose();
-      
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save draft. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setSavingDraft(false);
     }
   };
 
@@ -409,16 +386,49 @@ ${data.fundingGoal} HIVE
     );
   }
 
+  if (isDraftLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[500px] glass-card border-white/10">
+          <div className="flex flex-col items-center justify-center py-10">
+            <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+            <p className="text-gray-300">Loading project data...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto glass-card border-white/10">
         <DialogHeader>
           <DialogTitle className="text-2xl gradient-text flex items-center">
             <Rocket className="mr-2 h-5 w-5" />
-            Start a Project
+            {editDraftId ? "Edit Project" : "Start a Project"}
           </DialogTitle>
-          <DialogDescription className="text-gray-300">
-            Share your idea with the community and get the funding you need.
+          <DialogDescription className="text-gray-300 flex items-center justify-between">
+            <span>Share your idea with the community and get the funding you need.</span>
+            <div className="flex items-center ml-4">
+              {autoSaveStatus === "saving" && (
+                <span className="text-xs flex items-center text-amber-400">
+                  <Clock className="animate-pulse h-3 w-3 mr-1" />
+                  Saving...
+                </span>
+              )}
+              {autoSaveStatus === "saved" && (
+                <span className="text-xs flex items-center text-green-400">
+                  <Check className="h-3 w-3 mr-1" />
+                  Saved
+                </span>
+              )}
+              {autoSaveStatus === "error" && (
+                <span className="text-xs flex items-center text-red-400">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Error saving
+                </span>
+              )}
+            </div>
           </DialogDescription>
         </DialogHeader>
         
@@ -877,17 +887,6 @@ ${data.fundingGoal} HIVE
               </div>
               
               <div className="flex space-x-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={saveAsDraft}
-                  disabled={savingDraft}
-                  className="bg-secondary/20"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  {savingDraft ? "Saving..." : "Save Draft"}
-                </Button>
-                
                 {step < steps.length - 1 ? (
                   <Button 
                     type="button" 

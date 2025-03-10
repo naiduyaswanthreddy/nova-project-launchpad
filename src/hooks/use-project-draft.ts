@@ -1,0 +1,139 @@
+
+import { useState, useEffect, useCallback } from "react";
+import { useToast } from "@/hooks/use-toast";
+
+export interface ProjectDraftData {
+  id: string;
+  title: string;
+  category: string;
+  fundingGoal: string;
+  description: string;
+  coverImage: string;
+  socialLinks: {
+    website: string;
+    twitter: string;
+    discord: string;
+    github: string;
+  };
+  termsAccepted: boolean;
+  creator: string;
+  lastUpdated: string;
+}
+
+export function useProjectDraft(draftId: string, creator: string) {
+  const [draft, setDraft] = useState<ProjectDraftData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [autoSaveStatus, setAutoSaveStatus] = useState("idle");
+  const { toast } = useToast();
+  
+  // Load draft on mount
+  useEffect(() => {
+    const loadDraft = () => {
+      try {
+        setIsLoading(true);
+        const drafts = JSON.parse(localStorage.getItem('projectDrafts') || '[]');
+        const existingDraft = drafts.find((d: any) => d.id === draftId);
+        
+        if (existingDraft) {
+          setDraft(existingDraft);
+        } else if (draftId === 'new') {
+          // Create a new draft
+          const newDraft: ProjectDraftData = {
+            id: `draft-${Date.now()}`,
+            title: "",
+            category: "",
+            fundingGoal: "",
+            description: "",
+            coverImage: "",
+            socialLinks: {
+              website: "",
+              twitter: "",
+              discord: "",
+              github: ""
+            },
+            termsAccepted: false,
+            creator,
+            lastUpdated: new Date().toISOString()
+          };
+          setDraft(newDraft);
+          
+          // Save the new draft
+          saveProjectDraft(newDraft);
+        }
+      } catch (error) {
+        console.error("Error loading draft:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load draft data",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadDraft();
+  }, [draftId, creator, toast]);
+  
+  // Save draft to localStorage
+  const saveProjectDraft = useCallback((updatedDraft: ProjectDraftData) => {
+    try {
+      setAutoSaveStatus("saving");
+      
+      const drafts = JSON.parse(localStorage.getItem('projectDrafts') || '[]');
+      const draftIndex = drafts.findIndex((d: any) => d.id === updatedDraft.id);
+      
+      // Update lastUpdated timestamp
+      const draftToSave = {
+        ...updatedDraft,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      if (draftIndex >= 0) {
+        drafts[draftIndex] = draftToSave;
+      } else {
+        drafts.push(draftToSave);
+      }
+      
+      localStorage.setItem('projectDrafts', JSON.stringify(drafts));
+      setAutoSaveStatus("saved");
+      
+      // Reset status after a delay
+      setTimeout(() => {
+        setAutoSaveStatus("idle");
+      }, 2000);
+      
+      return draftToSave;
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      setAutoSaveStatus("error");
+      toast({
+        title: "Error",
+        description: "Failed to save draft changes",
+        variant: "destructive"
+      });
+      return null;
+    }
+  }, [toast]);
+  
+  // Update draft with new values
+  const updateDraft = useCallback((updates: Partial<ProjectDraftData>) => {
+    if (!draft) return;
+    
+    const updatedDraft = {
+      ...draft,
+      ...updates
+    };
+    
+    setDraft(updatedDraft);
+    saveProjectDraft(updatedDraft);
+  }, [draft, saveProjectDraft]);
+  
+  return {
+    draft,
+    isLoading,
+    updateDraft,
+    saveProjectDraft,
+    autoSaveStatus
+  };
+}

@@ -8,7 +8,11 @@ import { Navigation } from "@/components/layout/Navigation";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import MyProjects from "./pages/MyProjects";
+import BookmarkedProjects from "./pages/BookmarkedProjects";
+import Membership from "./pages/Membership";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
+import { applyTheme, getCurrentTheme } from "@/lib/utils";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,25 +23,35 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Navigation />
-        <div className="pt-16"> {/* Added padding to prevent content from being hidden under navbar */}
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/my-projects" element={<MyProjects />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Apply theme on app initialization
+  useEffect(() => {
+    const theme = getCurrentTheme();
+    applyTheme(theme);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Navigation />
+          <div className="pt-16"> {/* Added padding to prevent content from being hidden under navbar */}
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/my-projects" element={<MyProjects />} />
+              <Route path="/bookmarks" element={<BookmarkedProjects />} />
+              <Route path="/membership" element={<Membership />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
