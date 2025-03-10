@@ -1,34 +1,33 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
-import { ProjectFormValues } from "../project-form-schema";
+import { ProjectFormValues } from "@/utils/hive/types";
 
 interface DescriptionStepProps {
   form: UseFormReturn<ProjectFormValues>;
 }
 
-export function DescriptionStep({ form }: DescriptionStepProps) {
+export const DescriptionStep = ({ form }: DescriptionStepProps) => {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Project Description</h3>
-      <p className="text-gray-400 text-sm">Describe your project in detail to attract supporters.</p>
-      
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Description</FormLabel>
+            <FormLabel>Project Description</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder="Describe your project in detail. What is it? Why does it matter? How will you execute it?" 
+                placeholder="Describe your project in detail" 
                 {...field} 
-                className="min-h-[200px] bg-background/50 resize-y"
+                className="min-h-[200px]"
               />
             </FormControl>
             <FormDescription>
-              Be specific and comprehensive (minimum 50 characters). Include your goals, timeline, and what the funds will be used for.
+              Include what your project is about, why it matters, and how you plan to execute it.
+              <br />
+              You can use Markdown formatting for headers, lists, and emphasis.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -36,4 +35,4 @@ export function DescriptionStep({ form }: DescriptionStepProps) {
       />
     </div>
   );
-}
+};

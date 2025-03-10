@@ -1,20 +1,18 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CATEGORIES } from "../project-form-schema";
 import { UseFormReturn } from "react-hook-form";
-import { ProjectFormValues, CATEGORIES } from "../project-form-schema";
+import { ProjectFormValues } from "@/utils/hive/types";
 
 interface BasicInfoStepProps {
   form: UseFormReturn<ProjectFormValues>;
 }
 
-export function BasicInfoStep({ form }: BasicInfoStepProps) {
+export const BasicInfoStep = ({ form }: BasicInfoStepProps) => {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Project Basics</h3>
-      <p className="text-gray-400 text-sm">Let's start with the fundamentals of your project.</p>
-      
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="title"
@@ -23,31 +21,30 @@ export function BasicInfoStep({ form }: BasicInfoStepProps) {
             <FormLabel>Project Title</FormLabel>
             <FormControl>
               <Input 
-                placeholder="Enter a clear, specific title" 
+                placeholder="Enter a catchy title for your project" 
                 {...field} 
-                className="bg-background/50"
               />
             </FormControl>
             <FormDescription>
-              Make it catchy, clear, and memorable (5-100 characters)
+              Your title should be clear, specific, and memorable.
             </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
-      
+
       <FormField
         control={form.control}
         name="category"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Project Category</FormLabel>
+            <FormLabel>Category</FormLabel>
             <Select 
               onValueChange={field.onChange} 
               defaultValue={field.value}
             >
               <FormControl>
-                <SelectTrigger className="bg-background/50">
+                <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
               </FormControl>
@@ -60,7 +57,7 @@ export function BasicInfoStep({ form }: BasicInfoStepProps) {
               </SelectContent>
             </Select>
             <FormDescription>
-              Choose the category that best fits your project
+              Choose the category that best describes your project.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -68,4 +65,4 @@ export function BasicInfoStep({ form }: BasicInfoStepProps) {
       />
     </div>
   );
-}
+};
