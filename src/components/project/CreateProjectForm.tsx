@@ -72,7 +72,12 @@ const projectSchema = z.object({
     twitter: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
     discord: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
     github: z.string().url("Please enter a valid URL").optional().or(z.literal(""))
-  }).optional(),
+  }).transform(data => ({
+    website: data.website || "",
+    twitter: data.twitter || "",
+    discord: data.discord || "",
+    github: data.github || ""
+  })),
   termsAccepted: z.boolean().refine(val => val === true, {
     message: "You must accept the terms and conditions"
   })
