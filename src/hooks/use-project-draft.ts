@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { SocialLinks } from "@/utils/hive/types";
 
 export interface ProjectDraftData {
   id: string;
@@ -9,12 +10,7 @@ export interface ProjectDraftData {
   fundingGoal: string;
   description: string;
   coverImage: string;
-  socialLinks: {
-    website: string;
-    twitter: string;
-    discord: string;
-    github: string;
-  };
+  socialLinks: SocialLinks;
   termsAccepted: boolean;
   creator: string;
   lastUpdated: string;

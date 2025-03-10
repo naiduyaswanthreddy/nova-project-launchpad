@@ -27,3 +27,10 @@ export interface HiveProject {
   children: number;
   payout: number;
 }
+
+export interface SocialLinks {
+  website: string;
+  twitter: string;
+  discord: string;
+  github: string;
+}
