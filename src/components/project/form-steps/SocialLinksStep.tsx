@@ -1,90 +1,102 @@
 
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { ProjectFormValues } from "@/utils/hive/types";
-import { Twitter, Globe, MessageSquare, Github } from "lucide-react";
+import { ProjectFormValues } from "../project-form-schema";
 
 interface SocialLinksStepProps {
   form: UseFormReturn<ProjectFormValues>;
 }
 
-export const SocialLinksStep = ({ form }: SocialLinksStepProps) => {
+export function SocialLinksStep({ form }: SocialLinksStepProps) {
   return (
-    <div className="space-y-6">
-      <div className="text-sm text-muted-foreground mb-4">
-        Add social media links to help backers connect with you and learn more about your project.
-        <br />
-        All fields are optional but recommended.
-      </div>
-
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Social Links</h3>
+      <p className="text-gray-400 text-sm">Add links to your website and social media profiles.</p>
+      
       <FormField
         control={form.control}
         name="socialLinks.website"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center">
-              <Globe className="h-4 w-4 mr-2" />
-              Website
-            </FormLabel>
+            <FormLabel>Website</FormLabel>
             <FormControl>
-              <Input placeholder="https://yourwebsite.com" {...field} />
+              <Input 
+                placeholder="https://yourwebsite.com" 
+                {...field} 
+                className="bg-background/50"
+              />
             </FormControl>
+            <FormDescription>
+              Your project's website or personal site (optional)
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
-
+      
       <FormField
         control={form.control}
         name="socialLinks.twitter"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center">
-              <Twitter className="h-4 w-4 mr-2" />
-              Twitter
-            </FormLabel>
+            <FormLabel>Twitter</FormLabel>
             <FormControl>
-              <Input placeholder="https://twitter.com/yourusername" {...field} />
+              <Input 
+                placeholder="https://twitter.com/yourusername" 
+                {...field} 
+                className="bg-background/50"
+              />
             </FormControl>
+            <FormDescription>
+              Your Twitter profile (optional)
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
-
+      
       <FormField
         control={form.control}
         name="socialLinks.discord"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Discord
-            </FormLabel>
+            <FormLabel>Discord</FormLabel>
             <FormControl>
-              <Input placeholder="https://discord.gg/your-invite" {...field} />
+              <Input 
+                placeholder="https://discord.gg/invite" 
+                {...field} 
+                className="bg-background/50"
+              />
             </FormControl>
+            <FormDescription>
+              Your Discord server invite link (optional)
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
-
+      
       <FormField
         control={form.control}
         name="socialLinks.github"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center">
-              <Github className="h-4 w-4 mr-2" />
-              GitHub
-            </FormLabel>
+            <FormLabel>GitHub</FormLabel>
             <FormControl>
-              <Input placeholder="https://github.com/yourusername" {...field} />
+              <Input 
+                placeholder="https://github.com/yourusername" 
+                {...field} 
+                className="bg-background/50"
+              />
             </FormControl>
+            <FormDescription>
+              Your GitHub profile or project repository (optional)
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
     </div>
   );
-};
+}
